@@ -94,6 +94,15 @@ async def main(config_path="config.yaml"):
                     console.print(f"[red]❌ 无法找到 {title} 对应的 Deribit 期权合约[/red]")
                     continue
 
+                # === 最小防御：确保垂直价差两腿使用相同到期 ===
+                k1_exp_ts = instruments_map[title]["k1_expiration_timestamp"]
+                k2_exp_ts = instruments_map[title]["k2_expiration_timestamp"]
+                if k1_exp_ts != k2_exp_ts:
+                    console.print(
+                        f"[yellow]⏭️ 跳过 {title}：K1/K2 到期不一致 (k1={k1_exp_ts}, k2={k2_exp_ts})[/yellow]"
+                    )
+                    continue
+
                 # === 批量获取期权数据（含 bid/ask/iv/fee）===
                 deribit_list = get_deribit_option_data(currency=asset)
                 k1_info = next((d for d in deribit_list if d.get("instrument_name") == inst_k1), {})
